@@ -4,4 +4,4 @@ numpy==2.0.2
 pillow==11.1.0
 matplotlib==3.10.0
 opencv-python-headless==4.11.0.86
-gdown
+gdown==4.4.0
