@@ -73,20 +73,66 @@ st.markdown("""
 
 # === Load Model ===
 @st.cache_resource
-def load_models():
-    # Download the model from Google Drive if not already downloaded
-    model_url = 'https://drive.google.com/uc?export=download&id=16_FD4c7hQgoC_NNkY4i4_zkf3hpBAnVx'  # Replace YOUR_MODEL_ID with the actual file ID
-    model_path = 'Proposed.h5'
+import os
+import requests
+import streamlit as st
+from keras.models import load_model
+from tqdm import tqdm
+
+# Function to download a file from Google Drive
+def download_from_google_drive(file_id, destination):
+    # URL for downloading
+    URL = f"https://drive.google.com/uc?export=download&id=16_FD4c7hQgoC_NNkY4i4_zkf3hpBAnVx
+"
     
+    # Get the file's confirmation token (required for large files)
+    session = requests.Session()
+    response = session.get(URL, stream=True)
+    
+    # Check for the confirmation token in the response
+    for key, value in response.cookies.items():
+        if key.startswith('download_warning'):
+            confirm_token = value
+            break
+    else:
+        confirm_token = None
+    
+    # If the file is large, Google Drive will ask for confirmation to proceed with the download
+    if confirm_token:
+        URL = f"https://drive.google.com/uc?export=download&id=16_FD4c7hQgoC_NNkY4i4_zkf3hpBAnVx"
+    
+    # Download the file with the given confirmation token (if needed)
+    response = session.get(URL, stream=True)
+    
+    # Save the content to the destination file path
+    with open(destination, "wb") as file:
+        total_size = int(response.headers.get('content-length', 0))
+        with tqdm(total=total_size, unit='B', unit_scale=True) as pbar:
+            for data in response.iter_content(chunk_size=1024):
+                pbar.update(len(data))
+                file.write(data)
+
+# Function to load the model
+@st.cache_resource
+def load_models():
+    file_id = '16_FD4c7hQgoC_NNkY4i4_zkf3hpBAnVx'  # Replace with your actual file ID
+    model_path = 'Proposed.h5'
+
+    # Check if the model already exists
     if not os.path.exists(model_path):
-        # Download the model from Google Drive
-        gdown.download(model_url, model_path, quiet=False)
-        
+        # If not, download it from Google Drive
+        download_from_google_drive(file_id, model_path)
+    
     # Load the model
     classifier = load_model(model_path, compile=False)
     return classifier
 
+# Loading the model
 model = load_models()
+
+# Rest of your Streamlit app code
+st.write("Model Loaded Successfully")
+
 class_labels = ["Density1+Benign", "Density1+Malignant", "Density2+Benign", "Density2+Malignant",
                 "Density3+Benign", "Density3+Malignant", "Density4+Benign", "Density4+Malignant"]
 
