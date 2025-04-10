@@ -73,7 +73,7 @@ st.markdown("""
 # === Load Model ===
 @st.cache_resource
 def load_models():
-    classifier = load_model("Proposed.h5", compile=False)
+    classifier = load_model("MobileNetV2.h5", compile=False)
     return classifier
 
 model = load_models()
